@@ -80,7 +80,7 @@ class BotProtocol(ClientProtocol):
 
         p_position = buff.unpack('B')
 
-        if p_position in (0, 1) and p_text.strip():
+        if p_position in (0, 1) and p_text.to_string().strip():
             self.stdio_protocol.send_line(p_text)
     
     def send_chat(self, text):
