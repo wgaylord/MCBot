@@ -76,11 +76,11 @@ class BotProtocol(ClientProtocol):
 
     
     def packet_chat_message(self, buff):
-        p_text = buff.unpack_chat()
+        p_text = buff.unpack_chat().to_string()
 
         p_position = buff.unpack('B')
 
-        if p_position in (0, 1) and p_text.to_string().strip():
+        if p_position in (0, 1) and p_text.strip():
             self.stdio_protocol.send_line(p_text)
     
     def send_chat(self, text):
