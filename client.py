@@ -1,9 +1,23 @@
+import os
+import sys
 
-from twisted.internet import reactor, defer
+from twisted.internet import defer, reactor, stdio
+from twisted.protocols import basic
 from quarry.net.client import ClientFactory, ClientProtocol
 from quarry.types.registry import LookupRegistry
 from quarry.net.auth import ProfileCLI
 from world import world
+
+class StdioProtocol(basic.LineReceiver):
+    delimiter = os.linesep.encode('ascii')
+    in_encoding  = getattr(sys.stdin,  "encoding", 'utf8')
+    out_encoding = getattr(sys.stdout, "encoding", 'utf8')
+
+    def lineReceived(self, line):
+        self.minecraft_protocol.send_chat(line.decode(self.in_encoding))
+
+    def send_line(self, text):
+        self.sendLine(text.encode(self.out_encoding))
 
 
 class BotProtocol(ClientProtocol):
@@ -66,8 +80,11 @@ class BotProtocol(ClientProtocol):
 
         p_position = buff.unpack('B')
 
-        self.logger.info(":: %s" % p_text)
-        
+        if p_position in (0, 1) and p_text.strip():
+            self.stdio_protocol.send_line(p_text)
+    
+    def send_chat(self, text):
+        self.send_packet("chat_message", self.buff_type.pack_string(text))    
         
     def packet_chunk_data(self, buff):
         x, z, full = buff.unpack('ii?')
@@ -77,6 +94,7 @@ class BotProtocol(ClientProtocol):
         sections_length = buff.unpack_varint()
         sections = buff.unpack_chunk(bitmask)
         block_entities = [buff.unpack_nbt() for _ in range(buff.unpack_varint())]
+        full = False
         if full:
             y = 0
             for x1 in sections:
@@ -89,7 +107,16 @@ class BotProtocol(ClientProtocol):
 
 class BotFactory(ClientFactory):
     protocol = BotProtocol
+    
+    def buildProtocol(self, addr):
+        minecraft_protocol = super(BotFactory, self).buildProtocol(addr)
+        stdio_protocol = StdioProtocol()
 
+        minecraft_protocol.stdio_protocol = stdio_protocol
+        stdio_protocol.minecraft_protocol = minecraft_protocol
+
+        stdio.StandardIO(stdio_protocol)
+        return minecraft_protocol
 
 @defer.inlineCallbacks
 def run(args):
