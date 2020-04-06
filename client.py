@@ -84,11 +84,11 @@ class BotProtocol(ClientProtocol):
             self.stdio_protocol.send_line(p_text)
     
     def send_chat(self, text):
-        if test.startswith("#"):
-            if test == "#saveworld":
+        if text.startswith("#"):
+            if text == "#saveworld":
                 self.world.save()
-            if test == "#getblock":
-                self.world.getBlock(self.pos_look[0],self.pos_look[1]-1,self.pos_look[2])
+            if text == "#getblock":
+               self.stdio_protocol.send_line( self.world.getBlock(self.pos_look[0],self.pos_look[1]-1,self.pos_look[2])["name"])
         else:
             self.send_packet("chat_message", self.buff_type.pack_string(text))    
         
