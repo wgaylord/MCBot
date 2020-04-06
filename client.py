@@ -88,7 +88,7 @@ class BotProtocol(ClientProtocol):
             if text == "#saveworld":
                 self.world.save()
             if text == "#getblock":
-               self.stdio_protocol.send_line( self.world.getBlock(self.pos_look[0],self.pos_look[1]-1,self.pos_look[2])["name"])
+               print(self.world.getBlock(self.pos_look[0],self.pos_look[2],self.pos_look[1]))
         else:
             self.send_packet("chat_message", self.buff_type.pack_string(text))    
         
