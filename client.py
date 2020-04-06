@@ -8,6 +8,12 @@ from quarry.types.registry import LookupRegistry
 from quarry.net.auth import ProfileCLI
 from world import world
 
+from multiprocessing import Process
+
+
+def updateWorld(theworld):
+    theworld.process()
+
 class StdioProtocol(basic.LineReceiver):
     delimiter = os.linesep.encode('ascii')
     in_encoding  = getattr(sys.stdin,  "encoding", 'utf8')
@@ -73,6 +79,8 @@ class BotProtocol(ClientProtocol):
 
     def packet_keep_alive(self, buff):
         self.send_packet('keep_alive', buff.read())
+        p = Process(target=updateWorld, args=(self.world,))
+        p.start()
 
     
     def packet_chat_message(self, buff):
