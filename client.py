@@ -84,7 +84,13 @@ class BotProtocol(ClientProtocol):
             self.stdio_protocol.send_line(p_text)
     
     def send_chat(self, text):
-        self.send_packet("chat_message", self.buff_type.pack_string(text))    
+        if test.startswith("#"):
+            if test == "#saveworld":
+                self.world.save()
+            if test == "#getblock":
+                self.world.getBlock(self.pos_look[0],self.pos_look[1]-1,self.pos_look[2])
+        else:
+            self.send_packet("chat_message", self.buff_type.pack_string(text))    
         
     def packet_chunk_data(self, buff):
         x, z, full = buff.unpack('ii?')
