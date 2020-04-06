@@ -94,7 +94,6 @@ class BotProtocol(ClientProtocol):
         sections_length = buff.unpack_varint()
         sections = buff.unpack_chunk(bitmask)
         block_entities = [buff.unpack_nbt() for _ in range(buff.unpack_varint())]
-        full = False
         if full:
             y = 0
             for x1 in sections:

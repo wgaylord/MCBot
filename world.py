@@ -9,7 +9,7 @@ class world:
         
         
     def addSection(self,x,z,y,section):
-        self.blocks[str(x)+","+str(z)+","+str(y)] = section[0][0:4095]
+        self.blocks[str(x)+","+str(z)+","+str(y)] = section[0]
         
     def save(self):
         t = open("test.json","w+")
