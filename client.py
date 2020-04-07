@@ -8,11 +8,6 @@ from quarry.types.registry import LookupRegistry
 from quarry.net.auth import ProfileCLI
 from world import world
 
-from multiprocessing import Process
-
-
-def updateWorld(theworld):
-    theworld.process()
 
 class StdioProtocol(basic.LineReceiver):
     delimiter = os.linesep.encode('ascii')
@@ -75,12 +70,11 @@ class BotProtocol(ClientProtocol):
     def spawn(self):
         self.ticker.add_loop(1, self.update_player_inc)
         self.ticker.add_loop(20, self.update_player_full)
+#        self.ticker.add_loop(5,self.world.process)
         self.spawned = True
 
     def packet_keep_alive(self, buff):
         self.send_packet('keep_alive', buff.read())
-        p = Process(target=updateWorld, args=(self.world,))
-        p.start()
 
     
     def packet_chat_message(self, buff):
@@ -97,6 +91,8 @@ class BotProtocol(ClientProtocol):
                 self.world.save()
             if text == "#getblock":
                print(self.world.getBlock(self.pos_look[0],self.pos_look[2],self.pos_look[1]))
+            if text == "#getworldstat":
+               print("Existing Chunks: "+str(len(self.world.raw_blocks))+", Converted Chunks: "+str(len(self.world.blocks)))
         else:
             self.send_packet("chat_message", self.buff_type.pack_string(text))    
         
@@ -115,8 +111,18 @@ class BotProtocol(ClientProtocol):
                     x1[0].registry = self.registry
                     self.world.addSection(x,z,y,x1)
                 y+=1
-           
-    
+        else:
+            y = 0
+            for x1 in sections:
+                if x1:
+                    print(x,z,y)
+                y+=1 
+
+    def packet_block_change(self,buff):
+        pos = buff.unpack_position()
+        block = buff.unpack_varint()
+        self.world.updateBlock(pos[0],pos[1],pos[2],self.registry.decode_block(block))
+      #  print(pos,block,self.registry.decode_block(block)) 
 
 class BotFactory(ClientFactory):
     protocol = BotProtocol
